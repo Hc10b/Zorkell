@@ -1,15 +1,16 @@
-module AdventureEngine where
+module Zorkell.AdventureEngine where
 
-import Action
 import Control.Applicative
 import Control.Monad.State
 import Data.Char
 import qualified Data.Map as Map
 import Data.Map(Map)
-import GameData
-import Parser
 import System.IO
-import World
+import Zorkell.GameData
+import Zorkell.Parser hiding (trace)
+import Zorkell.Action
+import Zorkell.World
+import Debug.Trace
 
 loadGame = do
     printStrs . displayLocation $ currentLocation aWorld

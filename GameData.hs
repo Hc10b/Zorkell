@@ -1,12 +1,12 @@
-module GameData where
+module Zorkell.GameData where
 
-import Action
 import Control.Monad.State
 import Data.List
 import qualified Data.Map as Map
 import Data.Map(Map)
 import Data.Maybe
-import World
+import Zorkell.Action
+import Zorkell.World
 
 
 -- | Starting World State.
@@ -106,15 +106,15 @@ aWorld = world
                    , ("west from west of house", "west of house")
                    , ("mailbox", "west of house")
                    , ("north from north of house", "north of house")
-                   , ("east from west of house", "north of house")
+                   , ("east from north of house", "north of house")
                    , ("west from north of house", "north of house")
                    , ("north from behind house", "behind house")
                    , ("east from behind house", "behind house")
                    , ("south from behind house", "behind house")
-                   , ("window", "behind house")
-                   , ("east from behind house", "south of house")
-                   , ("south from behind house", "south of house")
-                   , ("west from behind house", "south of house")
+                   , ("a small window which is slightly ajar", "behind house")
+                   , ("east from south of house", "south of house")
+                   , ("south from south of house", "south of house")
+                   , ("west from south of house", "south of house")
                    , ("north from forest 1", "forest 1")
                    , ("east from forest 1", "forest 1")
                    , ("south from forest 1", "forest 1")
@@ -208,7 +208,7 @@ livingRoom = location "living room" "You are in the living room."
 
 -- | Exits by Room - starting, and outside of house. Constructed as objects, and placed as a list of strings in each room, since these do not change.
 -- 
-fromWestOfHouseToNorthOfHouse = exit "north from west of house" ["north"] "A path leads around the house to the north." (basicMove northOfHouse)
+fromWestOfHouseToNorthOfHouse = exit "north from west of house" ["n"] "A path leads around the house to the north." (basicMove northOfHouse)
 fromWestOfHouseToSouthOfHouse = exit "south from west of house" ["s"] "A path leads around the house to the south." (basicMove southOfHouse)
 fromWestOfHouseToForest1      = exit "west from west of house" ["w"] "A path leads away from the house to the east into a dense forest." (basicMove forest1)
 fromNorthOfHouseToForestPath  = exit "north from north of house" ["n"] "A path leads away from the house to the north toward an open forest path." (basicMove forestPath)

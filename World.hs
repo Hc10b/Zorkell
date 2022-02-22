@@ -1,14 +1,15 @@
-module World where
+module Zorkell.World where
 
-import Action
+import Zorkell.Action
 import Control.Applicative
 import Control.Monad
 import Control.Monad.State
 import Data.Char
-import Data.List
+import Data.List hiding (insert)
 import qualified Data.Map as Map
-import Data.Map(Map)
+import Data.Map(Map, (!), insert, notMember)
 import Data.Maybe
+import Debug.Trace
 
 
 type Conversations = Map String String
@@ -45,7 +46,7 @@ mapFromLocations locs = Map.fromList $ map ((,) <$> locationName <*> id) locs
 -- | Looks in the world map, and provides a location by its name.
 -- 
 getLocationByName :: World -> LocationID -> Location
-getLocationByName wrld loc = fromMaybe (error "That is not a valid roon name.") $ Map.lookup loc $ worldLocations wrld
+getLocationByName wrld loc = fromMaybe (error "That is not a valid room name.") $ Map.lookup loc $ worldLocations wrld
 
 -- | Create the object mapping for the world from a list of objects. Maps the object name to the object ID.
 --
@@ -54,8 +55,16 @@ mapFromObjects objs = Map.fromList $ map ((,) <$> objectName <*> id) objs
 
 -- | Looks in the world map, and provides an object by its name.
 -- 
-getObjectByName :: World -> ObjectID -> Object
-getObjectByName wrld obj = fromMaybe (error "That is not a valid object name.") $ Map.lookup obj $ worldObjects wrld
+getObjectByName :: World -> LocationID -> ObjectID -> Object
+getObjectByName wrld loc obj = fromMaybe (trace ("Searched key:"++(show obj)++". Available:" ++ show mapOfAvailableObjects) $ error "That is not a valid object name.") $ Map.lookup obj mapOfAvailableObjects
+    where
+        --localObjectLocations = Map.filter (== loc) (objectLocations wrld)
+        --localObjects = (worldObjects wrld)
+        localObjects = Map.filterWithKey (\k -> const $ maybe False (== loc) (Map.lookup k (objectLocations wrld))) (worldObjects wrld)
+        --localObjectIDs = Map.keys localObjectLocations
+        --objects = map (worldObjects wrld!) objectIDs 
+        mapOfAvailableObjects =
+            Map.foldr (\obj m->foldr (`insert` obj) m (objectAlias obj)) localObjects localObjects
 
 -- | Create the object location mapping for the world from a list of object name and location name pairs. Maps the object name to the location name.
 -- 
@@ -72,8 +81,19 @@ getLocByObj wrld obj = fromMaybe (error "There are no objects in here.") $ Map.l
 -- 
 isAtLoc :: ObjectID -> LocationID -> World -> Bool
 isAtLoc obj loc wrld
-    | obj `elem` (Map.keys (Map.filter (== loc) (objectLocations wrld))) = True
+    | obj `elem` allObjs = True
     | otherwise                                                          = False
+    where
+        localObjects = Map.filterWithKey (\k -> const $ maybe False (== loc) (Map.lookup k (objectLocations wrld))) (worldObjects wrld)
+        objectIDs = Map.keys (Map.filter (== loc) (objectLocations wrld))
+        --objects = map (worldObjects wrld!) objectIDs
+        objAliases = concatMap objectAlias localObjects
+        allObjs = []
+         ++ (trace ("Located objsIds without instance:"++ show unknownIds) [])
+         ++ (trace ("Objects without location:"++ show unlocatedObjs) [])
+         ++ objAliases ++ objectIDs
+        unknownIds = filter (\k -> notMember k (worldObjects wrld)) objectIDs
+        unlocatedObjs = Map.filterWithKey (\k _ -> notMember k (objectLocations wrld)) (worldObjects wrld)
     
 
 -- | Location data type and constructor. Exits are included in this data type, because they are immutable (in the sense that they cannot be moved from one location to another). Also includes a smart data constructor, as well as eq, and ord instances.
@@ -108,7 +128,7 @@ exit = Object
 -- 
 findInteractions :: ObjectID -> LocationID -> World -> Maybe (Action -> State World [String])
 findInteractions obj loc wrld = case isAtLoc obj loc wrld of
-    True  -> Just (objectReactions (getObjectByName wrld obj))
+    True  -> Just (objectReactions ((getObjectByName wrld loc obj)))
     False -> Nothing
                              
 instance Show Object where
@@ -141,7 +161,10 @@ instance Actionable Character where
 -- | Takes in a room and the movement command, and updates the current location in the world state.
 -- 
 basicMove :: Location -> Action -> State World [String]
-basicMove loc Go = do get >>= \wrld -> put wrld{ currentLocation = loc } >>= \_ -> singleAnswer $ (map (const '*') (locationName loc)) ++ "\n" ++ (map toUpper (locationName loc)) ++ "\n" ++ (map (const '*') (locationName loc)) ++ "\n" ++ (locationDescription loc)
+basicMove loc Go = do
+    get
+    >>= \wrld -> put wrld{ currentLocation = loc }
+    >>= \_ -> singleAnswer $ map (const '*') (locationName loc) ++ "\n" ++ (map toUpper (locationName loc)) ++ "\n" ++ (map (const '*') (locationName loc)) ++ "\n" ++ (locationDescription loc)
 basicMove _   _  = singleAnswer "You can't go that direction."
 
 

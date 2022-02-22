@@ -1,4 +1,4 @@
-module Action where
+module Zorkell.Action where
 
 
 -- | Sentance constructors to receive actions. Transitive verb structure makes the actions fairly simple to sort from the rest of the sentance, but Phrasal verb structures require a form and phrasal part that necessarily change the meaning.

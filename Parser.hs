@@ -1,8 +1,9 @@
-module Parser where
+module Zorkell.Parser where
 
-import Action
+import Zorkell.Action
 import Data.Char
 import Data.List
+import Debug.Trace
 
 
 -- | Define articles as a sentence part. Used in identifying objecst in the user provided commands.
